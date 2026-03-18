@@ -47,21 +47,26 @@ class EventController(val eventService: EventService, val clubService: ClubServi
 
     @PostMapping("/clubs/{clubId}/events")
     fun createEvent(@PathVariable clubId: Long, @Valid @ModelAttribute("form") form: EventFormDto,
-        bindingResult: BindingResult, model: Model): String {
+                    bindingResult: BindingResult, model: Model): String {
         if (bindingResult.hasErrors()) {
             model.addAttribute("club", clubService.getById(clubId))
-            return "events/new"  // volta ao formulário com erros
+            return "events/new"
         }
-
-        val event = eventService.create(
-            clubId = clubId,
-            name = form.name,
-            date = form.date!!,
-            location = form.location,
-            type = form.type!!,
-            description = form.description
-        )
-        return "redirect:/clubs/$clubId/events/${event.id}"
+        try {
+            val event = eventService.create(
+                clubId = clubId,
+                name = form.name,
+                date = form.date!!,
+                location = form.location,
+                type = form.type!!,
+                description = form.description
+            )
+            return "redirect:/clubs/$clubId/events/${event.id}"
+        } catch (e: IllegalArgumentException) {
+            bindingResult.rejectValue("name", "duplicate", e.message ?: "An event with this name already exists")
+            model.addAttribute("club", clubService.getById(clubId))
+            return "events/new"
+        }
     }
 
     @GetMapping("/clubs/{clubId}/events/{id}/edit")
@@ -82,20 +87,26 @@ class EventController(val eventService: EventService, val clubService: ClubServi
 
     @PostMapping("/clubs/{clubId}/events/{id}", params = ["_method=PUT"])
     fun updateEvent(@PathVariable clubId: Long, @PathVariable id: Long,
-        @Valid @ModelAttribute("form") form: EventFormDto, bindingResult: BindingResult, model: Model): String {
-            if (bindingResult.hasErrors()) {
-                model.addAttribute("club", clubService.getById(clubId))
-                return "events/edit"  // volta ao formulário com erros
-            }
-        val event = eventService.update(
-            id= id,
-            name = form.name,
-            date = form.date!!,
-            location = form.location,
-            type = form.type!!,
-            description = form.description
-        )
-        return "redirect:/clubs/$clubId/events/${event.id}"
+                    @Valid @ModelAttribute("form") form: EventFormDto, bindingResult: BindingResult, model: Model): String {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("club", clubService.getById(clubId))
+            return "events/edit"
+        }
+        try {
+            val event = eventService.update(
+                id = id,
+                name = form.name,
+                date = form.date!!,
+                location = form.location,
+                type = form.type!!,
+                description = form.description
+            )
+            return "redirect:/clubs/$clubId/events/${event.id}"
+        } catch (e: IllegalArgumentException) {
+            bindingResult.rejectValue("name", "duplicate", e.message ?: "An event with this name already exists")
+            model.addAttribute("club", clubService.getById(clubId))
+            return "events/edit"
+        }
     }
 
     @GetMapping("/clubs/{clubId}/events/{id}/delete")
@@ -109,6 +120,16 @@ class EventController(val eventService: EventService, val clubService: ClubServi
     fun deleteEvent(@PathVariable clubId: Long, @PathVariable id: Long): String {
         eventService.delete(id)
         return "redirect:/clubs/$clubId"
+    }
+    @PutMapping("/clubs/{clubId}/events/{id}")
+    fun updateEventPut(@PathVariable clubId: Long, @PathVariable id: Long,
+                       @Valid @ModelAttribute("form") form: EventFormDto, bindingResult: BindingResult, model: Model): String {
+        return updateEvent(clubId, id, form, bindingResult, model)
+    }
+
+    @DeleteMapping("/clubs/{clubId}/events/{id}")
+    fun deleteEventDelete(@PathVariable clubId: Long, @PathVariable id: Long): String {
+        return deleteEvent(clubId, id)
     }
 
 }
