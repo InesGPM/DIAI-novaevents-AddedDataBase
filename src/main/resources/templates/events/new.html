@@ -29,13 +29,17 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Type *</label>
-                    <select class="form-select" th:field="*{typeId}"
-                            th:classappend="${#fields.hasErrors('typeId')} ? 'is-invalid'">
+                    <select th:field="*{typeId}"
+                            class="form-select"
+                            th:classappend="${#fields.hasErrors('typeId')} ? ' is-invalid' : ''">
                         <option value="">Select type...</option>
-                        <option th:each="t : ${eventTypes}"
-                                th:value="${t.id}" th:text="${t.name}"></option>
+                        <option th:each="type : ${eventTypes}"
+                                th:value="${type.id}"
+                                th:text="${type.name}"></option>
                     </select>
-                    <div class="invalid-feedback" th:errors="*{typeId}"></div>
+                    <div class="invalid-feedback"
+                         th:if="${#fields.hasErrors('typeId')}"
+                         th:errors="*{typeId}"></div>
                 </div>
 
                 <div class="mb-3">

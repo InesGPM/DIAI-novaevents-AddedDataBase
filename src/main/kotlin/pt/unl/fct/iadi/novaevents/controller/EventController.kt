@@ -48,37 +48,42 @@ class EventController(val eventService: EventService, val clubService: ClubServi
     }
 
     @PostMapping("/clubs/{clubId}/events")
-    fun createEvent(@PathVariable clubId: Long, @Valid @ModelAttribute("form") form: EventFormDto,
-                    bindingResult: BindingResult, model: Model): String {
+    fun createEvent(
+        @PathVariable clubId: Long,
+        @Valid @ModelAttribute("form") form: EventFormDto,
+        bindingResult: BindingResult,
+        model: Model
+    ): String {
+
+        val resolvedTypeId = form.typeId
+            ?: form.type?.let { typeName ->
+                eventService.getAllTypes().find { it.name == typeName }?.id
+            }
+
+        if (resolvedTypeId == null) {
+            bindingResult.rejectValue("typeId", "required", "Event type is required")
+        }
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("club", clubService.getById(clubId))
             model.addAttribute("eventTypes", eventService.getAllTypes())
             return "events/new"
         }
-        try {
-            val resolvedTypeId = form.typeId
-                ?: form.type?.let { typeName ->
-                    eventService.getAllTypes().find { it.name == typeName }?.id
-                }
-                ?: run {
-                    bindingResult.rejectValue("typeId", "required", "Event type is required")
-                    model.addAttribute("club", clubService.getById(clubId))
-                    model.addAttribute("eventTypes", eventService.getAllTypes())
-                    return "events/new"
-                }
 
+        try {
             val event = eventService.create(
                 clubId = clubId,
                 name = form.name,
                 date = form.date!!,
                 location = form.location,
-                typeId = resolvedTypeId,
+                typeId = resolvedTypeId!!,
                 description = form.description
             )
             return "redirect:/clubs/$clubId/events/${event.id}"
         } catch (e: IllegalArgumentException) {
             bindingResult.rejectValue("name", "duplicate", e.message ?: "An event with this name already exists")
             model.addAttribute("club", clubService.getById(clubId))
+            model.addAttribute("eventTypes", eventService.getAllTypes())
             return "events/new"
         }
     }
@@ -101,32 +106,37 @@ class EventController(val eventService: EventService, val clubService: ClubServi
     }
 
     @PostMapping("/clubs/{clubId}/events/{id}", params = ["_method=PUT"])
-    fun updateEvent(@PathVariable clubId: Long, @PathVariable id: Long,
-                    @Valid @ModelAttribute("form") form: EventFormDto, bindingResult: BindingResult, model: Model): String {
+    fun updateEvent(
+        @PathVariable clubId: Long,
+        @PathVariable id: Long,
+        @Valid @ModelAttribute("form") form: EventFormDto,
+        bindingResult: BindingResult,
+        model: Model
+    ): String {
+
+        val resolvedTypeId = form.typeId
+            ?: form.type?.let { typeName ->
+                eventService.getAllTypes().find { it.name == typeName }?.id
+            }
+
+        if (resolvedTypeId == null) {
+            bindingResult.rejectValue("typeId", "required", "Event type is required")
+        }
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("club", clubService.getById(clubId))
             model.addAttribute("event", eventService.getById(id))
+            model.addAttribute("eventTypes", eventService.getAllTypes())
             return "events/edit"
         }
-        try {
-            val resolvedTypeId = form.typeId
-                ?: form.type?.let { typeName ->
-                    eventService.getAllTypes().find { it.name == typeName }?.id
-                }
-                ?: run {
-                    bindingResult.rejectValue("typeId", "required", "Event type is required")
-                    model.addAttribute("club", clubService.getById(clubId))
-                    model.addAttribute("event", eventService.getById(id))
-                    model.addAttribute("eventTypes", eventService.getAllTypes())
-                    return "events/edit"
-                }
 
+        try {
             val event = eventService.update(
                 id = id,
                 name = form.name,
                 date = form.date!!,
                 location = form.location,
-                typeId = resolvedTypeId,
+                typeId = resolvedTypeId!!,
                 description = form.description
             )
             return "redirect:/clubs/$clubId/events/${event.id}"
@@ -134,6 +144,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
             bindingResult.rejectValue("name", "duplicate", e.message ?: "An event with this name already exists")
             model.addAttribute("club", clubService.getById(clubId))
             model.addAttribute("event", eventService.getById(id))
+            model.addAttribute("eventTypes", eventService.getAllTypes())
             return "events/edit"
         }
     }
