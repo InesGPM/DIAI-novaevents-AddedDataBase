@@ -61,7 +61,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
                     eventService.getAllTypes().find { it.name == typeName }?.id
                 }
                 ?: run {
-                    bindingResult.rejectValue("type", "required", "Event type is required")
+                    bindingResult.rejectValue("typeId", "required", "Event type is required")
                     model.addAttribute("club", clubService.getById(clubId))
                     model.addAttribute("eventTypes", eventService.getAllTypes())
                     return "events/new"
@@ -114,7 +114,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
                     eventService.getAllTypes().find { it.name == typeName }?.id
                 }
                 ?: run {
-                    bindingResult.rejectValue("type", "required", "Event type is required")
+                    bindingResult.rejectValue("typeId", "required", "Event type is required")
                     model.addAttribute("club", clubService.getById(clubId))
                     model.addAttribute("event", eventService.getById(id))
                     model.addAttribute("eventTypes", eventService.getAllTypes())
