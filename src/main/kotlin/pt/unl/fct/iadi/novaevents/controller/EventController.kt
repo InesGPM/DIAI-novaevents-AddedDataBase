@@ -15,11 +15,15 @@ class EventController(val eventService: EventService, val clubService: ClubServi
     @GetMapping("/events")
     fun listEvents(
         @RequestParam(required = false) typeId: Long?,
+        @RequestParam(required = false) type: String?,
         @RequestParam(required = false) clubId: Long?,
         model: Model
     ): String {
+        val resolvedTypeId = typeId ?: type?.let {
+            eventService.getAllTypes().find { t -> t.name == it }?.id
+        }
         val clubs = clubService.getAll()
-        val events = eventService.getFiltered(clubId, typeId)
+        val events = eventService.getFiltered(clubId, resolvedTypeId)
         val eventTypes = eventService.getAllTypes()
         model.addAttribute("events", events)
         model.addAttribute("clubs", clubs)
@@ -48,15 +52,27 @@ class EventController(val eventService: EventService, val clubService: ClubServi
                     bindingResult: BindingResult, model: Model): String {
         if (bindingResult.hasErrors()) {
             model.addAttribute("club", clubService.getById(clubId))
+            model.addAttribute("eventTypes", eventService.getAllTypes())
             return "events/new"
         }
         try {
+            val resolvedTypeId = form.typeId
+                ?: form.type?.let { typeName ->
+                    eventService.getAllTypes().find { it.name == typeName }?.id
+                }
+                ?: run {
+                    bindingResult.rejectValue("type", "required", "Event type is required")
+                    model.addAttribute("club", clubService.getById(clubId))
+                    model.addAttribute("eventTypes", eventService.getAllTypes())
+                    return "events/new"
+                }
+
             val event = eventService.create(
                 clubId = clubId,
                 name = form.name,
                 date = form.date!!,
                 location = form.location,
-                typeId = form.typeId!!,
+                typeId = resolvedTypeId,
                 description = form.description
             )
             return "redirect:/clubs/$clubId/events/${event.id}"
@@ -93,12 +109,24 @@ class EventController(val eventService: EventService, val clubService: ClubServi
             return "events/edit"
         }
         try {
+            val resolvedTypeId = form.typeId
+                ?: form.type?.let { typeName ->
+                    eventService.getAllTypes().find { it.name == typeName }?.id
+                }
+                ?: run {
+                    bindingResult.rejectValue("type", "required", "Event type is required")
+                    model.addAttribute("club", clubService.getById(clubId))
+                    model.addAttribute("event", eventService.getById(id))
+                    model.addAttribute("eventTypes", eventService.getAllTypes())
+                    return "events/edit"
+                }
+
             val event = eventService.update(
                 id = id,
                 name = form.name,
                 date = form.date!!,
                 location = form.location,
-                typeId = form.typeId!!,
+                typeId = resolvedTypeId,
                 description = form.description
             )
             return "redirect:/clubs/$clubId/events/${event.id}"
