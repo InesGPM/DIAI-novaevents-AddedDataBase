@@ -12,4 +12,9 @@ class ClubService(val clubRepository: ClubRepository) {
 
     fun getById(id: Long): Club =
         clubRepository.findById(id).orElseThrow { NoSuchElementException("Club not found: $id") }
+
+    fun getEventCountByClub(): Map<Long, Long> =
+        clubRepository.countEventsByClub().associate {
+            (it[0] as Long) to (it[1] as Long)
+        }
 }

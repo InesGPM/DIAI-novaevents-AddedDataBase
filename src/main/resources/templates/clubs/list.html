@@ -14,6 +14,7 @@
             <th>Name</th>
             <th>Category</th>
             <th>Description</th>
+            <th>Events</th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -36,6 +37,7 @@
                     <p class="mt-2" th:text="${club.description}"></p>
                 </details>
             </td>
+            <td th:text="${eventCounts[club.id] ?: 0}"></td>  <!-- NOVO, antes do td de Actions -->
             <td>
                 <a th:href="@{/clubs/{id}(id=${club.id})}"
                    class="btn btn-sm btn-outline-primary">View Details</a>

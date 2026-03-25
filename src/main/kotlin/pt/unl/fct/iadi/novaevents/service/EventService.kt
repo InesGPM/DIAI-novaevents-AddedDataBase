@@ -7,14 +7,15 @@ import pt.unl.fct.iadi.novaevents.repository.ClubRepository
 import pt.unl.fct.iadi.novaevents.repository.EventRepository
 import pt.unl.fct.iadi.novaevents.repository.EventTypeRepository
 import java.time.LocalDate
+import java.util.*
 
 @Service
 class EventService (val clubRepository: ClubRepository, val eventRepository: EventRepository,val eventTypeRepository: EventTypeRepository) {
 
-    fun getAll(): List<Event> = eventRepository.findAll()
+    fun getAll(): List<Event> = eventRepository.findAllWithClubAndType()
 
     fun getById(id: Long): Event=
-        eventRepository.findById(id).orElseThrow  {NoSuchElementException("Event not found: $id")}
+        eventRepository.findById(id).orElseThrow  { NoSuchElementException("Event not found: $id") }
 
     fun getByClubId(clubId: Long): List<Event> {
         val club = clubRepository.findById(clubId).orElseThrow { NoSuchElementException("Club not found: $clubId") }
@@ -65,7 +66,7 @@ class EventService (val clubRepository: ClubRepository, val eventRepository: Eve
             club != null && type != null -> eventRepository.findByClubAndType(club, type)
             club != null -> eventRepository.findByClub(club)
             type != null -> eventRepository.findByType(type)
-            else -> eventRepository.findAll()
+            else -> eventRepository.findAllWithClubAndType()
         }
     }
 
