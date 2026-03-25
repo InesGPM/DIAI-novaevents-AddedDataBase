@@ -15,7 +15,7 @@ data class EventFormDto(
     val date: LocalDate? = null,
 
     @field:NotNull(message = "Event type is required")
-    val type: EventType? = null,
+    val typeId: Long? = null,
 
     val location: String? = null,
     val description: String? = null

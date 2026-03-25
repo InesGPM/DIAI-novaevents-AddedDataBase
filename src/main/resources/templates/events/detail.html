@@ -11,7 +11,7 @@
     <div class="card mt-3">
         <div class="card-body">
             <p><strong>Date</strong><br><span th:text="${#temporals.format(event.date, 'dd MMM yyyy')}"></span></p>
-            <p><strong>Type</strong><br><span class="badge bg-secondary" th:text="${event.type}"></span></p>
+            <p><strong>Type</strong><br><span class="badge bg-secondary" th:text="${event.type?.name}"></span></p>
             <p><strong>Location</strong><br><span th:text="${event.location ?: 'N/A'}"></span></p>
             <p><strong>Description</strong><br><span th:text="${event.description ?: 'N/A'}"></span></p>
             <p><strong>Club</strong><br>

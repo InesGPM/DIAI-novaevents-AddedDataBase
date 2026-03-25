@@ -6,7 +6,6 @@ import org.springframework.ui.Model
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import pt.unl.fct.iadi.novaevents.controller.dto.EventFormDto
-import pt.unl.fct.iadi.novaevents.model.EventType
 import pt.unl.fct.iadi.novaevents.service.ClubService
 import pt.unl.fct.iadi.novaevents.service.EventService
 
@@ -15,18 +14,16 @@ class EventController(val eventService: EventService, val clubService: ClubServi
 
     @GetMapping("/events")
     fun listEvents(
-        @RequestParam(required = false) type: EventType?,
+        @RequestParam(required = false) typeId: Long?,
         @RequestParam(required = false) clubId: Long?,
         model: Model
     ): String {
         val clubs = clubService.getAll()
-        var events = eventService.getAll()
-
-        if (type != null) events = events.filter { it.type == type }
-        if (clubId != null) events = events.filter { it.clubId == clubId }
-
+        val events = eventService.getFiltered(clubId, typeId)
+        val eventTypes = eventService.getAllTypes()
         model.addAttribute("events", events)
         model.addAttribute("clubs", clubs)
+        model.addAttribute("eventTypes", eventTypes)
         model.addAttribute("clubMap", clubs.associate { it.id to it.name })
         return "events/list"
     }
@@ -42,6 +39,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
     fun showCreateForm(@PathVariable clubId: Long, model: Model): String {
         model.addAttribute("club", clubService.getById(clubId))
         model.addAttribute("form", EventFormDto())
+        model.addAttribute("eventTypes", eventService.getAllTypes())
         return "events/new"
     }
 
@@ -58,7 +56,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
                 name = form.name,
                 date = form.date!!,
                 location = form.location,
-                type = form.type!!,
+                typeId = form.typeId!!,
                 description = form.description
             )
             return "redirect:/clubs/$clubId/events/${event.id}"
@@ -76,12 +74,13 @@ class EventController(val eventService: EventService, val clubService: ClubServi
             name = event.name,
             date = event.date,
             location = event.location,
-            type = event.type,
+            typeId = event.type?.id,
             description = event.description
         )
         model.addAttribute("club", clubService.getById(clubId))  // objeto Club completo
         model.addAttribute("event", event)  // objeto Event completo
         model.addAttribute("form", form)
+        model.addAttribute("eventTypes", eventService.getAllTypes())
         return "events/edit"
     }
 
@@ -99,7 +98,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
                 name = form.name,
                 date = form.date!!,
                 location = form.location,
-                type = form.type!!,
+                typeId = form.typeId!!,
                 description = form.description
             )
             return "redirect:/clubs/$clubId/events/${event.id}"
@@ -133,5 +132,7 @@ class EventController(val eventService: EventService, val clubService: ClubServi
     fun deleteEventDelete(@PathVariable clubId: Long, @PathVariable id: Long): String {
         return deleteEvent(clubId, id)
     }
+
+
 
 }
