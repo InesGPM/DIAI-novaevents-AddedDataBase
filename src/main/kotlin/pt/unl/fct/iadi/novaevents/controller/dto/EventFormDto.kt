@@ -14,9 +14,8 @@ data class EventFormDto(
     @field:DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     val date: LocalDate? = null,
 
-    @field:NotNull(message = "Event type is required")
     val typeId: Long? = null,
-    val type: String? = null,  // aceita string também
+    val type: String? = null,
 
     val location: String? = null,
     val description: String? = null
